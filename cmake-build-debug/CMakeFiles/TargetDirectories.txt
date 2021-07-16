@@ -1,0 +1,3 @@
+/Users/jonathanprieto/CLionProjects/pc2_grupon/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/jonathanprieto/CLionProjects/pc2_grupon/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/jonathanprieto/CLionProjects/pc2_grupon/cmake-build-debug/CMakeFiles/pc2_grupon.dir
