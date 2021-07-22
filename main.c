@@ -24,32 +24,55 @@ void allocate_memory(int size){
 
 int main() {
 
-    char str[100];
+    char str[8];
     gets( str );
     int size = atoi(str);
 
     allocate_memory(size);
+
     char process[3];
     char command[5];
     int bytes;
     char type_fit[2];
 
     while(1){
+
         printf("allocator>");
         scanf("%s %s %d %s" , command, process, &bytes, type_fit);
         //printf(command);
+
         if (strcmp(command, "STAT") == 0){
+
             status_report();
-        } else if(strcmp(command,"RQ") == 0){
-            request(process, bytes, type_fit);
-        } else if(strcmp(command,"RL") == 0){
-            release(process);
-        } else if(strcmp(command, "C") == 0){
-            compact();
-        } else if(strcmp(command, "X") == 0){
-            break;
+
         }
+
+        else if(strcmp(command,"RQ") == 0){
+
+            request(process, bytes, type_fit);
+
+        }
+
+        else if(strcmp(command,"RL") == 0){
+
+            release(process);
+
+        }
+
+        else if(strcmp(command, "C") == 0){
+
+            compact();
+
+        }
+
+        else if(strcmp(command, "X") == 0){
+
+            break;
+
+        }
+
         continue;
+
     }
 
 
