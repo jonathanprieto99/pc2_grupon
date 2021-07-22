@@ -11,9 +11,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f41b448c-acbd-49ad-9947-48fe0a0e942b" name="Default Changelist" comment="">
+    <list default="true" id="f41b448c-acbd-49ad-9947-48fe0a0e942b" name="Default Changelist" comment="Se agregaron el parser.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/pc2_grupon.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/pc2_grupon.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
@@ -71,8 +70,16 @@
       <updated>1626445919281</updated>
       <workItem from="1626445922968" duration="1176000" />
       <workItem from="1626450137085" duration="454000" />
-      <workItem from="1626911749336" duration="3136000" />
+      <workItem from="1626911749336" duration="4355000" />
     </task>
+    <task id="LOCAL-00001" summary="Se agregaron el parser.">
+      <created>1626915587933</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1626915587934</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -90,15 +97,8 @@
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/main.c</url>
-          <line>39</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Se agregaron el parser." />
+    <option name="LAST_COMMIT_MESSAGE" value="Se agregaron el parser." />
   </component>
 </project>

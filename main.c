@@ -3,19 +3,19 @@
 #include <string.h>
 
 void request(char process[2], int size, char typefit[1]){
-    printf("Se hace un request para el proceso: %s de tamaño: %d con un fit de tipo: %s", process, size, typefit);
+    printf("Se hace un request para el proceso: %s de tamaño: %d con un fit de tipo: %s\n", process, size, typefit);
 }
 
 void release(char process[2]){
-    printf("Se hace el release del proceso: %s",process);
+    printf("Se hace el release del proceso: %s\n",process);
 }
 
 void compact(){
-    printf("Entro a Compact");
+    printf("Entro a Compact\n");
 }
 
 void status_report(){
-    printf("Entro a Reporte de Status");
+    printf("Entro a Reporte de Status\n");
 }
 
 void allocate_memory(int size){
@@ -29,15 +29,15 @@ int main() {
     int size = atoi(str);
 
     allocate_memory(size);
-    char process[2];
-    char command[4];
+    char process[3];
+    char command[5];
     int bytes;
-    char type_fit;
+    char type_fit[2];
 
     while(1){
         printf("allocator>");
-        scanf("%s %s %d %s" , &command, &process, &bytes, &type_fit);
-        printf(command);
+        scanf("%s %s %d %s" , command, process, &bytes, type_fit);
+        //printf(command);
         if (strcmp(command, "STAT") == 0){
             status_report();
         } else if(strcmp(command,"RQ") == 0){
