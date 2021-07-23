@@ -30,7 +30,7 @@ void update_mem(struct memory* new_block, struct memory* new_unused_block){
         temp = contiguous_memory[i];
         if(temp->bottom<new_block->bottom && new_block->top>temp->top){
             updated_mem[j] = temp;
-        } else {
+        } else{
             updated_mem[j] = new_block;
             updated_mem[j+1] = new_unused_block;
             j+=2;
@@ -183,41 +183,50 @@ void request(char process[2], int size, char typefit[1]){
     if(status != 1) printf("ERROR: Not enough space for allocate the process\n");
 }
 
+struct memory* set_combination(struct memory* mem1, struct memory* mem2){
+    struct memory* new_combination = set_mem_values("U ",mem1->bottom,mem2->top);
+    free(mem1);
+    free(mem2);
+    blocks--;
+    return new_combination;
+}
+
 void combine_blocks(struct memory* new_unused_block){
     struct memory* temp; 
+    struct memory* temp_next; 
     struct memory* updated_mem[MEM_SIZE];
-    int old_num_blocks = blocks;
+    int already_updated = 0;
     int j=0;
-    for(int i = 0; i < blocks; i++){
-        j=i;
+    int old_num_block = blocks;
+    for(int i = 0; i < old_num_block; i++){
+        j=i+1;
+        int already_updated = 0;
         temp = contiguous_memory[i];
-        if(temp->pid[0]=='U'){
-            if(contiguous_memory[j++]->bottom==new_unused_block->bottom){
-                struct memory* new_combination = set_mem_values("U ",temp->bottom,new_unused_block->top);
-                free(temp);
-                free(new_unused_block);
-                updated_mem[i] = new_combination;
-                blocks--;
-                i++; 
+        temp_next = contiguous_memory[j]; 
+        if(temp->pid[0]=='U' && temp_next!=NULL){
+            if(temp_next->bottom==new_unused_block->bottom){
+                updated_mem[i] = set_combination(temp,new_unused_block);
+                //i++;
+                already_updated = 1;
             }
         }
-        if(temp->bottom==new_unused_block->bottom){
-            if(contiguous_memory[j++]->pid[0]=='U'){
-                struct memory* new_combination = set_mem_values("U ",new_unused_block->bottom,contiguous_memory[j++]->top);
-                free(temp);
-                free(contiguous_memory[j++]);
-                updated_mem[i] = new_combination;
-                i++;
-                blocks--;
+        if(already_updated==0){
+            if(temp->bottom==new_unused_block->bottom){
+                if(temp_next!=NULL){
+                    if(temp_next->pid[0]=='U'){
+                        updated_mem[i] = set_combination(temp,temp_next);
+                        already_updated = 1;
+                        //i++;
+                    } else{ 
+                        updated_mem[i] = new_unused_block;
+                    }
+                }
+            } else {
+                updated_mem[i] = temp;
             }
-            else {
-                updated_mem[i] = new_unused_block;
-            }
+
         }
-        else{
-            updated_mem[i] = temp;
-        }
-        //j++;
+        if(already_updated == 1) i++;
     }
 
     for(int i = 0; i < blocks; i++){
@@ -271,14 +280,11 @@ void status_report(){
     struct memory* temp; 
     for(int i = 0; i < blocks; i++){
         temp = contiguous_memory[i];
-        if (temp->pid[0] == 'P'){
+        if(temp->pid[0] == 'P'){
             printf("Addresses   [%d:%d] Process %s\n", temp->bottom, temp->top, temp->pid);
-        }
-
-        else{
+        } else{
             printf("Addresses   [%d:%d] Unused\n", temp->bottom, temp->top);
         }
-        //temp++;
     }
 }
 
@@ -296,7 +302,6 @@ void options(int mem_size){
     char command_line[COMMAND_LINE_SIZE];
 
     while(1){
-
         printf("allocator> ");
         scanf(" %[^\t\n]s",command_line);
 
@@ -309,7 +314,7 @@ void options(int mem_size){
             args_len++;
         }
 
-        if (strcmp(args[0], "STAT") == 0){
+        if(strcmp(args[0], "STAT") == 0){
             status_report();
         }
         else if(strcmp(args[0],"RQ") == 0){
@@ -342,9 +347,7 @@ int main() {
     int size = atoi(str);
 
     allocate_memory(size);
-
     options(size);
-
 
     return 0;
 }
