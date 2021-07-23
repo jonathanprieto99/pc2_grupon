@@ -62,7 +62,7 @@ void best_fit(char process[2], int size){
     struct memory* current = contiguous_memory;
     for(int i = 0; i < partitions; i++){
         int temp = current2->bottom + current2->top;
-        if(temp >= size && strcmp(current2->pid[0], (const char *) 'F')){
+        if(temp >= size && current2->pid[0] == 'F'){
             if(temp == size){
                 best = i;
                 min_value = temp;
@@ -109,7 +109,7 @@ void worst_fit(char process[2], int size){
     struct memory* current = contiguous_memory;
     for(int i = 0; i < partitions; i++){
         int temp = current2->bottom + current2->top;
-        if(temp >= size && strcmp(current2->pid[0], (const char *) 'F')){
+        if(temp >= size && current2->pid[0] == 'F'){
             if(temp > max_value){
                 worst = i;
                 max_value = temp;
@@ -117,8 +117,8 @@ void worst_fit(char process[2], int size){
         }
         current2++;
     }
-    for(int i = 0; i <= worst; i++){
-        ++current;
+    for(int i = 0; i < worst; i++){
+        current++;
     }
     int temp = current->bottom + current->top;
     struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
