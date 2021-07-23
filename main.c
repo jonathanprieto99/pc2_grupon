@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+
+#define COMMAND_LINE_SIZE 50
 struct memory{
     char pid[2];
     int bottom;
@@ -16,28 +18,31 @@ void first_fit(char process[2], int size){
     struct memory* current = contiguous_memory;
     for(int i = 0; i < partitions; i++){
         int temp = current->bottom + current->top;
-        if(temp >= size && strcmp(current->pid[0], (const char *) 'F')){
+        if(temp >= size && current->pid[0] == 'U'){
             struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
             if(temp == size){
                 new_block->bottom = current->bottom;
                 new_block->top = current->top;
                 memcpy(new_block->pid, process, sizeof(char) * 2);
+                current = new_block;
                 break;
             } else{
-                new_block->bottom = current->bottom+1;
+                if(partitions==0)
+                    new_block->bottom = current->bottom+1;
+                else new_block->bottom = current->bottom;
                 new_block->top = current->bottom + size;
                 memcpy(new_block->pid, process, sizeof(char) * 2);
                 partitions++;
-                struct memory new_partition;
-                new_partition.bottom = new_block->top + 1;
-                new_partition.top = (temp - size) + new_block->top;
-                new_partition.pid[0] = 'F';
+                struct memory *new_partition;
+                new_partition->bottom = new_block->top + 1;
+                new_partition->top = current->top;
+                new_partition->pid[0] = 'U';
                 struct memory new_array[partitions];
                 struct memory* iterator = contiguous_memory;
                 bool partition_added = false;
                 for(int j = 0; j < partitions; j++){
                     if(j == i + 1){
-                        new_array[j] = new_partition;
+                        new_array[j] = *new_partition;
                         partition_added = true;
                     } else if(j == i){
                         new_array[j] = *new_block;
@@ -47,7 +52,7 @@ void first_fit(char process[2], int size){
                         new_array[j] = *iterator;
                     }
                 }
-                contiguous_memory = new_array;
+                *contiguous_memory = *new_array;
                 break;
             }
         }
@@ -62,7 +67,7 @@ void best_fit(char process[2], int size){
     struct memory* current = contiguous_memory;
     for(int i = 0; i < partitions; i++){
         int temp = current2->bottom + current2->top;
-        if(temp >= size && current2->pid[0] == 'F'){
+        if(temp >= size && current2->pid[0] == 'U'){
             if(temp == size){
                 best = i;
                 min_value = temp;
@@ -86,7 +91,7 @@ void best_fit(char process[2], int size){
     struct memory new_partition;
     new_partition.bottom = new_block->top + 1;
     new_partition.top = (temp - size) + new_block->top;
-    new_partition.pid[0] = 'F';
+    new_partition.pid[0] = 'U';
     struct memory new_array[partitions];
     struct memory* iterator = contiguous_memory;
     bool partition_added = false;
@@ -109,7 +114,7 @@ void worst_fit(char process[2], int size){
     struct memory* current = contiguous_memory;
     for(int i = 0; i < partitions; i++){
         int temp = current2->bottom + current2->top;
-        if(temp >= size && current2->pid[0] == 'F'){
+        if(temp >= size && current2->pid[0] == 'U'){
             if(temp > max_value){
                 worst = i;
                 max_value = temp;
@@ -129,7 +134,7 @@ void worst_fit(char process[2], int size){
     struct memory new_partition;
     new_partition.bottom = new_block->top + 1;
     new_partition.top = (temp - size) + new_block->top;
-    new_partition.pid[0] = 'F';
+    new_partition.pid[0] = 'U';
     struct memory new_array[partitions];
     struct memory* iterator = contiguous_memory;
     bool partition_added = false;
@@ -145,8 +150,6 @@ void worst_fit(char process[2], int size){
     }
     contiguous_memory = new_array;
 }
-
-
 
 
 void request(char process[2], int size, char typefit[1]){
@@ -175,7 +178,7 @@ void release(char process[2]){
                 struct memory new_free;
                 new_free.bottom = temp->bottom;
                 new_free.top = temp->top;
-                new_free.pid[0] = 'F';
+                new_free.pid[0] = 'U';
                 free(temp);
                 temp = &new_free;
                 break;
@@ -189,11 +192,11 @@ void compact(){
     printf("Enters Compact\n");
     struct memory* temp = contiguous_memory;
     for(int i = 0; i < partitions; i++){
-        if(temp->pid[0] == 'F' && (temp + 1)->pid[0] == 'F'){
+        if(temp->pid[0] == 'F' && (temp + 1)->pid[0] == 'U'){
             struct memory new_part;
             new_part.bottom = temp->bottom;
             new_part.top = (temp + 1)->top;
-            new_part.pid[0] = 'F';
+            new_part.pid[0] = 'U';
             int new_partitions = partitions - 1;
             struct memory* new_array[new_partitions];
             bool partition_added = false;
@@ -212,15 +215,15 @@ void compact(){
 
 void status_report(){
     printf("Enters Status Report\n");
-    struct memory *temp = contiguous_memory;
+    struct memory temp; 
     for(int i = 0; i < partitions; i++){
-
-        if (temp->pid[0] == 'P'){
-            printf("Addresses   [%d:%d] Process %s\n", temp->bottom, temp->top, temp->pid);
+        temp = contiguous_memory[i];
+        if (temp.pid[0] == 'P'){
+            printf("Addresses   [%d:%d] Process %s\n", temp.bottom, temp.top, temp.pid);
         }
 
         else{
-            printf("Addresses   [%d:%d] Unused\n", temp->bottom, temp->top);
+            printf("Addresses   [%d:%d] Unused\n", temp.bottom, temp.top);
         }
         //temp++;
     }
@@ -231,85 +234,61 @@ void allocate_memory(int size){
     struct memory *block = malloc(sizeof(struct memory));
     block->bottom = 0;
     block->top = size;
-    strcpy(block->pid, "F");
+    block->pid[0] = 'U';
     contiguous_memory = block;
     partitions = 1;
-    // int random_size = rand() % 25 + 5;
-    // int random_size = 10;
-    // int bottoms[random_size];
-    // bottoms[0] = 0;
-    // struct memory array[random_size];
-    // int mem_remaining = size;
-    // int mem_remaining_temp = size;
-    // // for(int i = 0; i < random_size; i++){
-    // //     struct memory temp;
-    // //     int partition = rand() % random_size / 3 + 1;
-    // //     int r = rand() % mem_remaining / partition;
-    // //     if(i == 0) temp.bottom = 0;
-    // //     else temp.bottom = array[i - 1].top + 1;
-    // //     if (i == 9)temp.top = size;
-    // //     else temp.top = temp.bottom + r;
-    // //     array[i] = temp;
-    // //     mem_remaining -= r;
-    // //     printf("[%d, %d]\n", array[i].bottom, array[i].top);
-    // // }
-    // int remaining = size;
-    // int suma = 0;
-    // for(int i = 0; i < random_size; i++){
-    //     // int partition = rand() % random_size / 3 + 1;
-    //     int partition = rand() % remaining / 2 + 1;
-    //     if(i == random_size - 1) partition = remaining;
-    //     //Porcentajes, luego multiplicarlo por el size esas 10 veces y obtengo las particiones
-    //     // int r = rand() % mem_remaining_temp / partition;
-    //     printf("Partition %d\n", partition);
-    //     suma += partition;
-    //     remaining -= partition;
-    // }
+}
+
+void options(){
+    char command_line[COMMAND_LINE_SIZE];
+
+    while(1){
+
+        printf("allocator> ");
+        scanf(" %[^\t\n]s",command_line);
+        printf("%s",command_line);
+
+        char* arg;
+        char* temp = command_line;
+        char* args[COMMAND_LINE_SIZE];
+        int args_len=0;
+        while((arg = strtok_r(temp," ",&temp))){
+            args[args_len] = arg;
+            args_len++;
+        }
+
+        if (strcmp(args[0], "STAT") == 0){
+            status_report();
+        }
+        else if(strcmp(args[0],"RQ") == 0){
+            request(args[1], atoi(args[2]), args[3]);
+        }
+        else if(strcmp(args[0],"RL") == 0){
+            release(args[1]);
+        }
+        else if(strcmp(args[0], "C") == 0){
+            compact();
+        }
+        else if(strcmp(args[0], "X") == 0){
+            break;
+        } 
+        else{
+            printf("ERROR: That command does not exist.\n");
+        }
+        continue;
+    }
 }
 
 int main() {
 
     char str[8];
-    gets( str );
+    printf("./allocator ");
+    scanf("%s", str);
     int size = atoi(str);
 
     allocate_memory(size);
 
-    char process[3];
-    char command[5];
-    int bytes;
-    char type_fit[2];
-
-    while(1){
-
-        printf("allocator>");
-        scanf("%s %s %d %s" , command, process, &bytes, type_fit);
-        //printf(command);
-
-        if (strcmp(command, "STAT") == 0){
-            status_report();
-        }
-
-        else if(strcmp(command,"RQ") == 0){
-            request(process, bytes, type_fit);
-        }
-
-        else if(strcmp(command,"RL") == 0){
-            release(process);
-        }
-
-        else if(strcmp(command, "C") == 0){
-            compact();
-        }
-
-        else if(strcmp(command, "X") == 0){
-            break;
-        }
-
-        continue;
-
-    }
-
+    options();
 
 
     return 0;
