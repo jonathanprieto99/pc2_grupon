@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 struct memory{
     char pid[2];
     int bottom;
@@ -12,17 +13,19 @@ int partitions; // array size
 
 
 void first_fit(char process[2], int size){
+    struct memory* current = contiguous_memory;
     for(int i = 0; i < partitions; i++){
-        int temp = contiguous_memory->bottom + contiguous_memory->top;
-        if(temp >= size && strcmp(contiguous_memory->pid[0], (const char *) 'F')){
+        int temp = current->bottom + current->top;
+        if(temp >= size && strcmp(current->pid[0], (const char *) 'F')){
             struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
             if(temp == size){
-                new_block->bottom = contiguous_memory->bottom;
-                new_block->top = contiguous_memory->top;
+                new_block->bottom = current->bottom;
+                new_block->top = current->top;
                 memcpy(new_block->pid, process, sizeof(char) * 2);
+                break;
             } else{
-                new_block->bottom = contiguous_memory->bottom+1;
-                new_block->top = contiguous_memory->bottom + size;
+                new_block->bottom = current->bottom+1;
+                new_block->top = current->bottom + size;
                 memcpy(new_block->pid, process, sizeof(char) * 2);
                 partitions++;
                 struct memory new_partition;
@@ -30,28 +33,117 @@ void first_fit(char process[2], int size){
                 new_partition.top = (temp - size) + new_block->top;
                 new_partition.pid[0] = 'F';
                 struct memory new_array[partitions];
+                struct memory* iterator = contiguous_memory;
+                bool partition_added = false;
                 for(int j = 0; j < partitions; j++){
                     if(j == i + 1){
                         new_array[j] = new_partition;
-                    }
-
+                        partition_added = true;
+                    } else if(j == i){
+                        new_array[j] = *new_block;
+                    } else if(partition_added) new_array[j] = *(iterator - 1);
                     else{
                         printf("OK");
+                        new_array[j] = *iterator;
                     }
-                    new_array[j] = contiguous_memory[j];
                 }
                 contiguous_memory = new_array;
+                break;
             }
         }
+        current++;
     }
 }
 
-void best_fit(){
-
+void best_fit(char process[2], int size){
+    int best = 0;
+    int min_value = 100000000;
+    struct memory* current2 = contiguous_memory;
+    struct memory* current = contiguous_memory;
+    for(int i = 0; i < partitions; i++){
+        int temp = current2->bottom + current2->top;
+        if(temp >= size && strcmp(current2->pid[0], (const char *) 'F')){
+            if(temp == size){
+                best = i;
+                min_value = temp;
+                break;
+            } else if(temp < min_value){
+                best = i;
+                min_value = temp;
+            }
+        }
+        current2++;
+    }
+    for(int i = 0; i <= best; i++){
+        ++current;
+    }
+    int temp = current->bottom + current->top;
+    struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
+    new_block->bottom = current->bottom+1;
+    new_block->top = current->bottom + size;
+    memcpy(new_block->pid, process, sizeof(char) * 2);
+    partitions++;
+    struct memory new_partition;
+    new_partition.bottom = new_block->top + 1;
+    new_partition.top = (temp - size) + new_block->top;
+    new_partition.pid[0] = 'F';
+    struct memory new_array[partitions];
+    struct memory* iterator = contiguous_memory;
+    bool partition_added = false;
+    for(int i = 0; i < partitions; i++){
+        if(i == best){
+            new_array[i] = *new_block;
+            partition_added = true;
+        }
+        else if(i == best + 1) new_array[i] = new_partition;
+        else if(partition_added) new_array[i] = *(iterator - 1);
+        else new_array[i] = *iterator;
+    }
+    contiguous_memory = new_array;
 }
 
-void worst_fit(){
-
+void worst_fit(char process[2], int size){
+    int worst = 0;
+    int max_value = 0;
+    struct memory* current2 = contiguous_memory;
+    struct memory* current = contiguous_memory;
+    for(int i = 0; i < partitions; i++){
+        int temp = current2->bottom + current2->top;
+        if(temp >= size && strcmp(current2->pid[0], (const char *) 'F')){
+            if(temp > max_value){
+                worst = i;
+                max_value = temp;
+            }
+        }
+        current2++;
+    }
+    for(int i = 0; i <= worst; i++){
+        ++current;
+    }
+    int temp = current->bottom + current->top;
+    struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
+    new_block->bottom = current->bottom+1;
+    new_block->top = current->bottom + size;
+    memcpy(new_block->pid, process, sizeof(char) * 2);
+    partitions++;
+    struct memory new_partition;
+    new_partition.bottom = new_block->top + 1;
+    new_partition.top = (temp - size) + new_block->top;
+    new_partition.pid[0] = 'F';
+    struct memory new_array[partitions];
+    struct memory* iterator = contiguous_memory;
+    bool partition_added = false;
+    for(int i = 0; i < partitions; i++){
+        if(i == worst){
+            new_array[i] = *new_block;
+            partition_added = true;
+        }
+        else if(i == worst + 1) new_array[i] = new_partition;
+        else if(partition_added) new_array[i] = *(iterator - 1);
+        else new_array[i] = *iterator;
+        iterator++;
+    }
+    contiguous_memory = new_array;
 }
 
 
@@ -64,10 +156,10 @@ void request(char process[2], int size, char typefit[1]){
             first_fit(process,size);
             break;
         case 'B':
-            best_fit();
+            best_fit(process,size);
             break;
         case 'W':
-            worst_fit();
+            worst_fit(process,size);
             break;
         default:
             return;
@@ -76,10 +168,46 @@ void request(char process[2], int size, char typefit[1]){
 
 void release(char process[2]){
     printf("Realeasing process: %s\n",process);
+    struct memory* temp = contiguous_memory;
+    for(int i = 0; i < partitions; i++){
+        if(temp->pid[0] == 'P'){
+            if(strcmp(temp->pid,process)){
+                struct memory new_free;
+                new_free.bottom = temp->bottom;
+                new_free.top = temp->top;
+                new_free.pid[0] = 'F';
+                free(temp);
+                temp = &new_free;
+                break;
+            }
+        }
+        temp++;
+    }
 }
 
 void compact(){
     printf("Enters Compact\n");
+    struct memory* temp = contiguous_memory;
+    for(int i = 0; i < partitions; i++){
+        if(temp->pid[0] == 'F' && (temp + 1)->pid[0] == 'F'){
+            struct memory new_part;
+            new_part.bottom = temp->bottom;
+            new_part.top = (temp + 1)->top;
+            new_part.pid[0] = 'F';
+            int new_partitions = partitions - 1;
+            struct memory* new_array[new_partitions];
+            bool partition_added = false;
+            struct memory* current = contiguous_memory;
+            for(int j = 0; j < new_partitions; j++){
+                if(j == i){
+                    new_array[i] = &new_part;
+                    partition_added = true;
+                }else if(partition_added) new_array[i] = (current + 1);
+                else new_array[i] = current;
+                current++;
+            }
+        }
+    }
 }
 
 void status_report(){
