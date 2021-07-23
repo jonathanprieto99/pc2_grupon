@@ -7,22 +7,22 @@ struct memory{
     int top;
 };
 
-struct memory *contiguous_memory; // pointer to array
+struct memory contiguous_memory; // pointer to array
 int partitions; // array size
 
 
 void first_fit(char process[2], int size){
     for(int i = 0; i < partitions; i++){
-        int temp = contiguous_memory->bottom + contiguous_memory->top;
-        if(temp >= size && strcmp(contiguous_memory->pid[0], 'F')){
+        int temp = contiguous_memory.bottom + contiguous_memory.top;
+        if(temp >= size && strcmp(contiguous_memory.pid[0], (const char *) 'F')){
             struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
             if(temp == size){
-                new_block->bottom = contiguous_memory->bottom;
-                new_block->top = contiguous_memory->top;
+                new_block->bottom = contiguous_memory.bottom;
+                new_block->top = contiguous_memory.top;
                 memcpy(new_block->pid, process, sizeof(char) * 2);
             } else{
-                new_block->bottom = contiguous_memory->bottom+1;
-                new_block->top = contiguous_memory->bottom + size;
+                new_block->bottom = contiguous_memory.bottom+1;
+                new_block->top = contiguous_memory.bottom + size;
                 memcpy(new_block->pid, process, sizeof(char) * 2);
                 partitions++;
                 struct memory new_partition;
@@ -33,9 +33,9 @@ void first_fit(char process[2], int size){
                 for(int j = 0; j < partitions; j++){
                     if(j == i + 1){
                         new_array[j] = new_partition;
-                    } else new_array[j] = contiguous_memory[j];
+                    } //to check else new_array[j] = contiguous_memory[j];
                 }
-                contiguous_memory = new_array;
+                //tocheck contiguous_memory = new_array;
             }
         }
     }
@@ -79,12 +79,17 @@ void compact(){
 
 void status_report(){
     printf("Enters Status Report\n");
-    struct memory *temp = contiguous_memory;
+    struct memory temp = contiguous_memory;
     for(int i = 0; i < partitions; i++){
-        if(strcmp(temp->pid[0], 'P') == 0)
-            printf("Addresses   [%d:%d] Process %s\n", temp->bottom, temp->top, temp->pid);
-        else printf("Addresses   [%d:%d] Unused\n", temp->bottom, temp->top);
-        temp++;
+
+        if (temp.pid[0] == 'P'){
+            printf("Addresses   [%d:%d] Process %s\n", temp.bottom, temp.top, temp.pid);
+        }
+
+        else{
+            printf("Addresses   [%d:%d] Unused\n", temp.bottom, temp.top);
+        }
+        //temp++;
     }
 }
 
@@ -93,8 +98,8 @@ void allocate_memory(int size){
     struct memory block;
     block.bottom = 0;
     block.top = size;
-    block.pid[0] = 'F';
-    contiguous_memory = &block;
+    strcpy(block.pid, "F");
+    contiguous_memory = block;
     partitions = 1;
     // int random_size = rand() % 25 + 5;
     // int random_size = 10;
