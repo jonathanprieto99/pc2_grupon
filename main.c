@@ -11,6 +11,14 @@ struct memory{
     int top;
 };
 
+struct memory* set_mem_values(char new_pid[2], int new_bottom,int new_top){
+    struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
+    new_block->bottom = new_bottom;
+    new_block->top = new_top;
+    memcpy(new_block->pid, new_pid, sizeof(char) * 2);
+    return new_block;
+}
+
 struct memory* contiguous_memory[MEM_SIZE]; // pointer to array
 int blocks; // array size
 
@@ -44,21 +52,14 @@ int first_fit(char process[2], int size){
         current = contiguous_memory[i];
         int temp = current->top - current->bottom;
         if(temp >= size && current->pid[0] == 'U'){
-            struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
+            struct memory* new_block;
             if(temp == size){
-                new_block->bottom = current->bottom;
-                new_block->top = current->top;
-                memcpy(new_block->pid, process, sizeof(char) * 2);
+                new_block = set_mem_values(process,current->bottom,current->top);
                 current = new_block;
                 break;
             } else{
-                new_block->bottom = current->bottom;
-                new_block->top = new_block->bottom + size;
-                memcpy(new_block->pid, process, sizeof(char) * 2);
-                struct memory *new_unused_block = (struct memory*) malloc(sizeof(struct memory));
-                new_unused_block->bottom = new_block->top + 1;
-                new_unused_block->top = current->top;
-                new_unused_block->pid[0] = 'U';                
+                new_block = set_mem_values(process,current->bottom,current->bottom+size);
+                struct memory *new_unused_block = set_mem_values("U ",new_block->top+1,current->top);            
                 update_mem(new_block,new_unused_block);
                 process_in_mem = 1;
                 break;
