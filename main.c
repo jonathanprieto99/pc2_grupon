@@ -11,6 +11,9 @@ struct memory{
     int top;
 };
 
+struct memory* contiguous_memory[MEM_SIZE]; // pointer to array
+int blocks; // array size
+
 struct memory* set_mem_values(char new_pid[2], int new_bottom,int new_top){
     struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
     new_block->bottom = new_bottom;
@@ -18,9 +21,6 @@ struct memory* set_mem_values(char new_pid[2], int new_bottom,int new_top){
     memcpy(new_block->pid, new_pid, sizeof(char) * 2);
     return new_block;
 }
-
-struct memory* contiguous_memory[MEM_SIZE]; // pointer to array
-int blocks; // array size
 
 void update_mem(struct memory* new_block, struct memory* new_unused_block){
     struct memory* temp; 
@@ -68,8 +68,6 @@ int first_fit(char process[2], int size){
     }
     return process_in_mem;
 }
-
-
 
 int best_fit(char process[2], int size){
     /* int best = 0;
@@ -185,23 +183,60 @@ void request(char process[2], int size, char typefit[1]){
     if(status != 1) printf("ERROR: Not enough space for allocate the process\n");
 }
 
+void combine_blocks(struct memory* new_unused_block){
+    struct memory* temp; 
+    struct memory* updated_mem[MEM_SIZE];
+    int old_num_blocks = blocks;
+    int j=0;
+    for(int i = 0; i < blocks; i++){
+        j=i;
+        temp = contiguous_memory[i];
+        if(temp->pid[0]=='U'){
+            if(contiguous_memory[j++]->bottom==new_unused_block->bottom){
+                struct memory* new_combination = set_mem_values("U ",temp->bottom,new_unused_block->top);
+                free(temp);
+                free(new_unused_block);
+                updated_mem[i] = new_combination;
+                blocks--;
+                i++; 
+            }
+        }
+        if(temp->bottom==new_unused_block->bottom){
+            if(contiguous_memory[j++]->pid[0]=='U'){
+                struct memory* new_combination = set_mem_values("U ",new_unused_block->bottom,contiguous_memory[j++]->top);
+                free(temp);
+                free(contiguous_memory[j++]);
+                updated_mem[i] = new_combination;
+                i++;
+                blocks--;
+            }
+            else {
+                updated_mem[i] = new_unused_block;
+            }
+        }
+        else{
+            updated_mem[i] = temp;
+        }
+        //j++;
+    }
+
+    for(int i = 0; i < blocks; i++){
+        contiguous_memory[i] = updated_mem[i];
+    }
+}
+
 void release(char process[2]){
     printf("Realeasing process: %s\n",process);
     struct memory* temp;
     for(int i = 0; i < blocks; i++){
         temp = contiguous_memory[i];
         if(temp->pid[0] == 'P'){
-            if(strcmp(temp->pid,process)){
-                struct memory new_free;
-                new_free.bottom = temp->bottom;
-                new_free.top = temp->top;
-                new_free.pid[0] = 'U';
-                free(temp);
-                temp = &new_free;
+            if(strcmp(temp->pid,process)==0){
+                struct memory *new_unused_mem = set_mem_values("U ",temp->bottom,temp->top);
+                combine_blocks(new_unused_mem);
                 break;
             }
         }
-        temp++;
     }
 }
 
