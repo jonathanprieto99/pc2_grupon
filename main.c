@@ -57,7 +57,8 @@ int first_fit(char process[2], int size){
             struct memory* new_block;
             if(temp == size){
                 new_block = set_mem_values(process,current->bottom,current->top);
-                current = new_block;
+                contiguous_memory[i] = new_block;
+                process_in_mem = 1;
                 break;
             } else{
                 new_block = set_mem_values(process,current->bottom,current->bottom+size);
@@ -72,96 +73,64 @@ int first_fit(char process[2], int size){
 }
 
 int best_fit(char process[2], int size){
-    /* int best = 0;
+    struct memory* current;
+    int process_in_mem = 0;
+    int best = 0;
     int min_value = 100000000;
-    struct memory* current2 = contiguous_memory;
-    struct memory* current = contiguous_memory;
-    for(int i = 0; i < partitions; i++){
-        int temp = current2->bottom + current2->top;
-        if(temp >= size && current2->pid[0] == 'U'){
+    struct memory* new_block;
+    for(int i = 0; i < blocks; i++){
+        current = contiguous_memory[i];
+        int temp = current->top - current->bottom;
+        if(temp >= size && current->pid[0] == 'U'){
             if(temp == size){
                 best = i;
                 min_value = temp;
-                break;
+                new_block = set_mem_values(process,current->bottom,current->top);
+                contiguous_memory[i] = new_block;
+                process_in_mem = 1;
+                return process_in_mem;
             } else if(temp < min_value){
                 best = i;
                 min_value = temp;
             }
         }
-        current2++;
     }
-    for(int i = 0; i <= best; i++){
-        ++current;
+
+    if(best < blocks){
+        new_block = set_mem_values(process, contiguous_memory[best]->bottom, contiguous_memory[best]->bottom + size);
+        struct memory* new_unused_block = set_mem_values("U ", new_block->top + 1, contiguous_memory[best]->top);
+        update_mem(new_block, new_unused_block);
+        process_in_mem = 1;
     }
-    int temp = current->bottom + current->top;
-    struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
-    new_block->bottom = current->bottom+1;
-    new_block->top = current->bottom + size;
-    memcpy(new_block->pid, process, sizeof(char) * 2);
-    partitions++;
-    struct memory new_partition;
-    new_partition.bottom = new_block->top + 1;
-    new_partition.top = (temp - size) + new_block->top;
-    new_partition.pid[0] = 'U';
-    struct memory new_array[partitions];
-    struct memory* iterator = contiguous_memory;
-    bool partition_added = false;
-    for(int i = 0; i < partitions; i++){
-        if(i == best){
-            new_array[i] = *new_block;
-            partition_added = true;
-        }
-        else if(i == best + 1) new_array[i] = new_partition;
-        else if(partition_added) new_array[i] = *(iterator - 1);
-        else new_array[i] = *iterator;
-    }
-    contiguous_memory = new_array; */
-    return 0;
+
+    return process_in_mem;
 }
 
 int worst_fit(char process[2], int size){
-    /* int worst = 0;
+    struct memory* current;
+    int process_in_mem = 0;
+    int worst = 0;
     int max_value = 0;
-    struct memory* current2 = contiguous_memory;
-    struct memory* current = contiguous_memory;
-    for(int i = 0; i < partitions; i++){
-        int temp = current2->bottom + current2->top;
-        if(temp >= size && current2->pid[0] == 'U'){
+    struct memory* new_block;
+    for(int i = 0; i < blocks; i++){
+        current = contiguous_memory[i];
+        int temp = current->top - current->bottom;
+        if(temp >= size && current->pid[0] == 'U'){
             if(temp > max_value){
                 worst = i;
                 max_value = temp;
             }
         }
-        current2++;
     }
-    for(int i = 0; i < worst; i++){
-        current++;
+    
+    if(worst < blocks){
+        new_block = set_mem_values(process, contiguous_memory[worst]->bottom, contiguous_memory[worst]->bottom + size);
+        struct memory* new_unused_block = set_mem_values("U ", new_block->top + 1, contiguous_memory[worst]->top);
+        update_mem(new_block, new_unused_block);
+        process_in_mem = 1;
     }
-    int temp = current->bottom + current->top;
-    struct memory *new_block = (struct memory*) malloc(sizeof(struct memory));
-    new_block->bottom = current->bottom+1;
-    new_block->top = current->bottom + size;
-    memcpy(new_block->pid, process, sizeof(char) * 2);
-    partitions++;
-    struct memory new_partition;
-    new_partition.bottom = new_block->top + 1;
-    new_partition.top = (temp - size) + new_block->top;
-    new_partition.pid[0] = 'U';
-    struct memory new_array[partitions];
-    struct memory* iterator = contiguous_memory;
-    bool partition_added = false;
-    for(int i = 0; i < partitions; i++){
-        if(i == worst){
-            new_array[i] = *new_block;
-            partition_added = true;
-        }
-        else if(i == worst + 1) new_array[i] = new_partition;
-        else if(partition_added) new_array[i] = *(iterator - 1);
-        else new_array[i] = *iterator;
-        iterator++;
-    }
-    contiguous_memory = new_array; */
-    return 0;
+
+    return process_in_mem;
 }
 
 
