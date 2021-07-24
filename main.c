@@ -133,9 +133,7 @@ int worst_fit(char process[2], int size){
     return process_in_mem;
 }
 
-
 void request(char process[2], int size, char typefit[1]){
-    printf("Request for process: %s of size: %d with a fit of type: %s\n", process, size, typefit);
     int status;
     switch(typefit[0]){
         case 'F':
@@ -151,7 +149,8 @@ void request(char process[2], int size, char typefit[1]){
             printf("ERROR: Fit type not found.\n");
             return;
     }
-    if(status != 1) printf("ERROR: Not enough space for allocate the process\n");
+    if(status != 1) printf("ERROR: Not enough space to allocate the process\n");
+    else printf("Request for process: %s of size: %d with a fit of type: %s\n", process, size, typefit);
 }
 
 struct memory* set_combination(struct memory* mem1, struct memory* mem2){
@@ -208,19 +207,21 @@ void release_mem(struct memory* new_unused_block){
 
 
 void release(char process[2]){
-    printf("Realeasing process: %s\n",process);
     struct memory* temp;
+    int process_not_found = 0;
     for(int i = 0; i < blocks; i++){
         temp = contiguous_memory[i];
         if(temp->pid[0] == 'P'){
             if(strcmp(temp->pid,process)==0){
                 struct memory *new_unused_mem = set_mem_values("U ",temp->bottom,temp->top);
-                //combine_blocks(new_unused_mem);
                 release_mem(new_unused_mem);
+                process_not_found = 1;
                 break;
             }
         }
     }
+    if(process_not_found != 1) printf("ERROR: Process %s not in memory.\n",process);
+    else printf("Realeasing process: %s\n",process);
 }
 
 void compact(){
@@ -293,9 +294,11 @@ void options(int mem_size){
         }
         else if(strcmp(args[0],"RQ") == 0){
             int block_size = atoi(args[2]);
-            if(block_size>mem_size){
-                printf("ERROR: Exceeded size.\n");
-            } else request(args[1], block_size, args[3]);
+            if(block_size>mem_size)
+                printf("ERROR: Exceeded memory size.\n");
+            else if(block_size <= 0)
+                printf("ERROR: Size is not big enough.\n"); 
+            else request(args[1], block_size, args[3]);
         }
         else if(strcmp(args[0],"RL") == 0){
             release(args[1]);
@@ -306,9 +309,7 @@ void options(int mem_size){
         else if(strcmp(args[0], "X") == 0){
             break;
         } 
-        else{
-            printf("ERROR: That command does not exist.\n");
-        }
+        else printf("ERROR: That command does not exist.\n");
         continue;
     }
 }
